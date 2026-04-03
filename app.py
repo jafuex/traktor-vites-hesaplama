@@ -4,16 +4,16 @@ import plotly.graph_objects as go
 
 st.set_page_config(page_title="Traktör Vites Kutusu Analizi", page_icon="🚜", layout="wide")
 
-st.title("🚜 Traktör Mekanik Hız Kutusu Seçim Yazılımı")
-st.markdown("Bu sistem; girdiğiniz motor özelliklerine göre transmisyon oranlarını hesaplar. Her vites için motorun ideal çalışma devirleri arasındaki hız ve çekiş kuvveti aralıklarını tez verileriyle uyumlu olarak analiz eder.")
+st.title("Traktör Mekanik Hız Kutusu Seçim Yazılımı")
+st.markdown("Bu sistem; girdiğiniz motor özelliklerine göre transmisyon oranlarını hesaplar. Her vites için motorun ideal çalışma devirleri arasındaki hız ve çekiş kuvveti aralıklarını mühendislik hesaplarıyla uyumlu olarak analiz eder.")
 
 # --- SOL MENÜ (KULLANICI GİRDİLERİ) ---
-st.sidebar.header("⚙️ Vites Kutusu Parametreleri")
+st.sidebar.header(" Vites Kutusu Parametreleri")
 z = st.sidebar.number_input("Toplam Vites Sayısı (z)", min_value=2, value=8, step=1)
-i_g_max = st.sidebar.number_input("1. Vites Şanzıman Oranı (i_G,max)", value=12.003, format="%.3f", help="Örn: Ana Vites 1 x Takviye L")
-i_g_min = st.sidebar.number_input("Son Vites Şanzıman Oranı (i_G,min)", value=0.600, format="%.3f")
+i_g_max = st.sidebar.number_input("1. Vites Şanzıman Oran)", value=12.003, format="%.3f", help="Örn: Ana Vites 1 x Takviye L")
+i_g_min = st.sidebar.number_input("Son Vites Şanzıman Oranı)", value=0.600, format="%.3f")
 i_sabit = st.sidebar.number_input("Diferansiyel ve Cer Sabit Oranı", value=22.35, format="%.2f", help="Şanzıman çıkışını tekerleğe ileten son indirgeme oranı.")
-r_statik = st.sidebar.number_input("Lastik Statik Yarıçapı (m)", value=0.510, format="%.3f")
+r_statik = st.sidebar.number_input("Lastik Statik Yarıçapı)", value=0.510, format="%.3f")
 
 st.sidebar.markdown("---")
 st.sidebar.subheader("Motor Karakteristikleri")
@@ -35,17 +35,12 @@ kuvvetler_min, kuvvetler_max, kuvvet_farki = [], [], []
 uygun_vites_sayisi = 0
 
 for n in range(1, z + 1):
-    # Denklem 6: Sadece vites kutusu oranı
     i_n = i_g_min * (phi_th ** (z - n)) 
-    
-    # KRİTİK DÜZELTME: Toplam Aktarım Oranı (i_top) hesabı
     i_top = i_n * i_sabit
     
-    # Denklem 1: İlerleme Hızı (i_top kullanılarak)
     v_min = (0.377 * r_dinamik * N_m_min) / i_top 
     v_max = (0.377 * r_dinamik * N_m_max) / i_top 
     
-    # Denklem 2: Çevre Kuvveti (i_top kullanılarak)
     f_u_max = (M_m_max * i_top * verim) / r_dinamik 
     f_u_min = (M_m_nom * i_top * verim) / r_dinamik 
     
@@ -69,7 +64,7 @@ df = pd.DataFrame({"Vites": vitesler, "Şanzıman Oranı": oranlar, "Min Hız (k
 col1, col2 = st.columns([1, 2])
 
 with col1:
-    st.subheader("📊 Analiz Raporu")
+    st.subheader("Analiz Raporu")
     st.write(f"**Geometrik Çarpan ($\phi_{{th}}$):** {phi_th:.3f}")
     if phi_th > devir_orani:
         st.error(f"🚨 **KRİTİK HATA:** Geometrik çarpan ({phi_th:.3f}), motor devir oranını ({devir_orani:.3f}) aşıyor. Vitesler arası kopukluk var!")
@@ -84,13 +79,14 @@ with col1:
     st.dataframe(df, use_container_width=True, height=400)
 
 with col2:
-    tab1, tab2 = st.tabs(["📈 Hız Grafiği", "💪 Çekiş Kuvveti Grafiği"])
+    # 3. Sekme Eklendi!
+    tab1, tab2, tab3 = st.tabs([" Hız Barları", " Çekiş Kuvveti", " Devir - Hız İlişkisi "])
     dinamik_yukseklik = max(500, z * 25) 
     
     with tab1:
         fig_hiz = go.Figure()
         fig_hiz.add_trace(go.Bar(y=df["Vites"], x=hiz_farki, base=df["Min Hız (km/h)"], orientation='h', marker_color='#F39C12', hovertemplate="Min Hız: %{base} km/h<br>Max Hız: %{x} km/h<extra></extra>"))
-        fig_hiz.update_layout(title="Hız Aralıkları", xaxis_title="İlerleme Hızı (km/h)", barmode='overlay', height=dinamik_yukseklik, plot_bgcolor='rgba(0,0,0,0)')
+        fig_hiz.update_layout(title="Yatay Hız Aralıkları", xaxis_title="İlerleme Hızı (km/h)", barmode='overlay', height=dinamik_yukseklik, plot_bgcolor='rgba(0,0,0,0)')
         fig_hiz.add_vrect(x0=4, x1=12, fillcolor="rgba(46, 204, 113, 0.15)", layer="below", line_width=0)
         st.plotly_chart(fig_hiz, use_container_width=True)
 
@@ -99,3 +95,37 @@ with col2:
         fig_kuvvet.add_trace(go.Bar(y=df["Vites"], x=kuvvet_farki, base=df["Min Çekiş (N)"], orientation='h', marker_color='#E74C3C', hovertemplate="Min Çekiş: %{base} N<br>Max Çekiş: %{x} N<extra></extra>"))
         fig_kuvvet.update_layout(title="Çekiş Kuvveti Aralıkları", xaxis_title="Çevre Kuvveti (N)", barmode='overlay', height=dinamik_yukseklik, plot_bgcolor='rgba(0,0,0,0)')
         st.plotly_chart(fig_kuvvet, use_container_width=True)
+
+    with tab3:
+        # Testere Dişi Grafiği (Line Chart)
+        fig_testere = go.Figure()
+        
+        # Her vites için N_min'den N_max'a uzanan çizgiler çiziyoruz
+        for i in range(len(vitesler)):
+            fig_testere.add_trace(go.Scatter(
+                x=[hizlar_min[i], hizlar_max[i]], 
+                y=[N_m_min, N_m_max],
+                mode='lines+markers',
+                name=vitesler[i],
+                line=dict(width=3),
+                marker=dict(size=6),
+                hovertemplate="Hız: %{x} km/h<br>Devir: %{y} d/d<extra></extra>"
+            ))
+            
+        fig_testere.update_layout(
+            title="Devir - Hız İlişkisi",
+            xaxis_title="İlerleme Hızı (km/h)", 
+            yaxis_title="Motor Devri (dev/dak)",
+            height=600, 
+            plot_bgcolor='rgba(0,0,0,0)',
+            hovermode="x unified"
+        )
+        
+        # Arka plan grid çizgileri (okumayı kolaylaştırır)
+        fig_testere.update_xaxes(showgrid=True, gridwidth=1, gridcolor='rgba(128,128,128,0.2)')
+        fig_testere.update_yaxes(showgrid=True, gridwidth=1, gridcolor='rgba(128,128,128,0.2)')
+        
+        # Tarım çalışma aralığı gölgelendirmesi
+        fig_testere.add_vrect(x0=4, x1=12, fillcolor="rgba(46, 204, 113, 0.15)", layer="below", line_width=0, annotation_text="Tarımsal Çalışma Bandı", annotation_position="top left")
+        
+        st.plotly_chart(fig_testere, use_container_width=True)
