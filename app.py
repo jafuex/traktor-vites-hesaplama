@@ -10,8 +10,8 @@ st.markdown("Bu sistem; girdiğiniz motor özelliklerine göre transmisyon oranl
 # --- SOL MENÜ (KULLANICI GİRDİLERİ) ---
 st.sidebar.header(" Vites Kutusu Parametreleri")
 z = st.sidebar.number_input("Toplam Vites Sayısı (z)", min_value=2, value=8, step=1)
-i_g_max = st.sidebar.number_input("1. Vites Şanzıman Oran)", value=12.003, format="%.3f", help="Örn: Ana Vites 1 x Takviye L")
-i_g_min = st.sidebar.number_input("Son Vites Şanzıman Oranı)", value=0.600, format="%.3f")
+i_g_max = st.sidebar.number_input("1. Vites Şanzıman Oran", value=12.003, format="%.3f", help="Örn: Ana Vites 1 x Takviye L")
+i_g_min = st.sidebar.number_input("Son Vites Şanzıman Oranı", value=0.600, format="%.3f")
 i_sabit = st.sidebar.number_input("Diferansiyel ve Cer Sabit Oranı", value=22.35, format="%.2f", help="Şanzıman çıkışını tekerleğe ileten son indirgeme oranı.")
 r_statik = st.sidebar.number_input("Lastik Statik Yarıçapı)", value=0.510, format="%.3f")
 
